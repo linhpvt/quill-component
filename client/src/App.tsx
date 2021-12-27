@@ -1,4 +1,6 @@
-import './App.css';
+import React from 'react';
+import './App.scss';
+
 import Editor from './components/editor';
 
 function App() {

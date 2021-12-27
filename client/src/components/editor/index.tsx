@@ -1,7 +1,13 @@
-import { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback } from 'react';
 import Quill from 'quill';
-// quill snow theme
 import 'quill/dist/quill.snow.css';
+import BetterTable from './modules/table/quill-better-table';
+Quill.register(
+  {
+    'modules/better-table': BetterTable,
+  },
+  true,
+);
 
 const TOOLBAR_OPTIONS = [
   ['bold', 'italic', 'underline', 'strike'], // toggled buttons
@@ -24,38 +30,119 @@ const TOOLBAR_OPTIONS = [
   ['image'], // insert images
   ['video'], // insert video
   ['link'],
-  // ['table'], // table in toolbar
+  ['table'], // table in toolbar
 
   ['clean'], // remove formatting button
 ];
 
 const Editor = ({ content }: EditorProps) => {
   const quillRef = useCallback((wrapperEl: HTMLDivElement) => {
-    // not visible on the page
-    if (wrapperEl === null) {
-      return;
-    }
+    window.onload = () => {
+      // not visible on the page
+      if (wrapperEl === null) {
+        return;
+      }
 
-    // clean up toolbars for every component's rendering
-    wrapperEl.innerHTML = '';
+      // clean up toolbars for every component's rendering
+      wrapperEl.innerHTML = '';
 
-    // quill's toolbar inside of `____quill-wrapper`
-    const div = document.createElement('div');
-    wrapperEl.append(div);
-    const editor = new Quill(div, {
-      theme: 'snow',
-      modules: { toolbar: TOOLBAR_OPTIONS },
-    });
-
-    const buttons = document.querySelectorAll(
-      '.____quill-wrapper > .ql-toolbar button',
-    );
-    buttons.forEach((button) => {
-      button.setAttribute('data-toggle', 'tooltip');
-      button.setAttribute('title', 'tooltip');
+      // quill's toolbar inside of `____quill-wrapper`
+      const div = document.createElement('div');
+      wrapperEl.append(div);
       // @ts-ignore
-      // $(button).tooltip();
-    });
+      const quill = new Quill(div, {
+        theme: 'snow',
+        modules: {
+          'better-table': {
+            operationMenu: {
+              items: {
+                unmergeCells: {
+                  text: 'Another unmerge cells name',
+                },
+              },
+            },
+          },
+          keyboard: {
+            bindings: BetterTable.keyboardBindings,
+          },
+          toolbar: {
+            container: TOOLBAR_OPTIONS,
+            handlers: {
+              table: (...args: any) => {
+                const tbIcon = document.querySelector('.ql-table');
+                if (!tbIcon) {
+                  return;
+                }
+                const { top, left, height } = tbIcon.getBoundingClientRect();
+                const div = document.createElement('div');
+                div.style.position = 'fixed';
+                div.style.top = top + height + 'px';
+                div.style.left = left + 'px';
+                div.style.width = '30px';
+                div.style.height = '30px';
+                div.style.backgroundColor = 'blue';
+                div.addEventListener('click', () => {
+                  const table = quill.getModule('better-table');
+                  table.insertTable(3, 3);
+                });
+                document.body.append(div);
+              },
+            },
+          },
+        },
+      });
+
+      // @ts-ignore
+      // const editor = new Quill(div, {
+      //   theme: 'snow',
+      //   modules: {
+      //     toolbar: {
+      //       container: TOOLBAR_OPTIONS,
+      //       handlers: {
+      //         table: (e: any) => console.log(e),
+      //       },
+      //     },
+      //     // table: false, // disable table module
+      //     // table: false, // disable table module
+      //     table: true,
+      //     tableUI: true,
+
+      //     // 'better-table': {
+      //     //   operationMenu: {
+      //     //     items: {
+      //     //       unmergeCells: {
+      //     //         text: 'Another unmerge cells name',
+      //     //       },
+      //     //       insertColumnRight: {
+      //     //         text: 'Another unmerge cells name',
+      //     //       },
+      //     //     },
+      //     //   },
+      //     // },
+      //     // keyboard: {
+      //     //   bindings: QuillBetterTable.keyboardBindings,
+      //     // },
+      //   },
+      // });
+
+      // @ts-ignore
+      // window.quill = editor;
+
+      const buttons = document.querySelectorAll(
+        '.____quill-wrapper > .ql-toolbar button',
+      );
+      buttons.forEach((button) => {
+        button.setAttribute('data-toggle', 'tooltip');
+        button.setAttribute('title', 'tooltip');
+        // @ts-ignore
+        // $(button).tooltip();
+      });
+      setTimeout(() => {
+        // @ts-ignore
+        // const table = quill.getModule('better-table');
+        // table.insertTable(3, 3);
+      }, 2000);
+    };
   }, []);
 
   // actually, a ref can accept a function with sigature above
